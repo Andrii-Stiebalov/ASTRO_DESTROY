@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixi Game</title>
+    <style>
+      /* Убираем отступы и прокрутку */
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #111; /* фон, можешь поменять */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* Контейнер для канваса Pixi */
+      #game-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

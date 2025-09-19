@@ -1,0 +1,32 @@
+import * as PIXI from "pixi.js";
+import { Entity } from "./Entity";
+import { Player } from "./Player";
+
+export class BossBullet extends Entity {
+  public fromPlayer: boolean = false;
+  public damage: number = 2;
+  public speed: number = 3;
+
+  constructor(x: number, y: number, screenWidth: number = 800, screenHeight: number = 600) {
+    super(PIXI.Texture.WHITE);
+    this.tint = 0xff0000; // красная пуля босса
+    this.width = screenWidth * 0.006; // 0.6% от ширины экрана
+    this.height = screenHeight * 0.006; // 1.7% от высоты экрана
+    this.position.set(x, y);
+  }
+
+  onTriggerCollision(other: Entity): void {
+    if (other instanceof Player) {
+      this.kill();
+    }
+  }
+
+  update(dt: number) {
+    this.y += this.speed * dt; // движется вниз
+    this.x += this.speed * 0.2; // движется вниз
+    // проверка выхода за экран
+    if (this.y > 720) { // фиксированное значение для совместимости
+      this.entityDestroy();
+    }
+  }
+}
