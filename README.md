@@ -1,6 +1,6 @@
 # 🚀 ASTRO_DESTROY — Ігровий прототип
 
-[![Demo Version](https://img.shields.io/badge/ДЕМО-ВЕРСІЯ-00cc44?style=for-the-badge&logo=astro)](https://andrii-stiebalov.github.io/ASTRO_DESTROY/)
+[[Demo Version]](https://andrii-stiebalov.github.io/ASTRO_DESTROY/)
 ![Status](https://img.shields.io/badge/СТАН-В_РОЗРОБЦІ-orange?style=for-the-badge)
 ![Last Updated](https://img.shields.io/badge/ОНОВЛЕНО-21.09.2025-blue?style=for-the-badge)
 
@@ -71,6 +71,7 @@ open index.html
 ```
 
 ---
+
 
 
 
