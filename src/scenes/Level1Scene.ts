@@ -10,7 +10,7 @@ import { WaveManager } from "../core/WaveManager";
 import { Boss } from "../entities/Boss";
 import { BossBullet } from "../entities/BossBullet";
 import { Filter, GlProgram } from "pixi.js";
-import { starFragment, starVertex } from "../shaders/starsShader";
+import { fragment, vertex } from "../shaders/starsShader";
 
 type Updatable = { update?: (dt: number) => void };
 
@@ -50,75 +50,60 @@ export class Level1Scene extends Scene {
   private screenHeight: number;
   private bgSprite: PIXI.Sprite;
   private bgFilter: Filter;
+  public shader: PIXI.Shader;
   timeUniform: any
   constructor(game: Game) {
     super(game);
+    this.setUpVars();
     this.createStars();
-    this.screenWidth = game.app.screen.width;
-    this.screenHeight = game.app.screen.height;
+    this.createPlayer();
+    this.craateBgFilter()
 
-    // --- игрок ---
-    this.player = new Player(PIXI.Texture.WHITE, this.screenWidth, this.screenHeight);
-    this.container.addChild(this.player);
-    this.game.hud.setPlayerHealth(this.player.helth, this.player.maxHelth);
-
-    // --- фон со звездами ---
-    this.bgSprite = new PIXI.Sprite();
-    this.bgSprite.width = this.screenWidth;
-    this.bgSprite.height = this.screenHeight;
-    this.bgSprite.anchor.set(0);
-    this.bgSprite.zIndex = -1000;
-    this.container.addChildAt(this.bgSprite, 0);
-    this.timeUniform = { value: 0.0 };
-
-    this.bgFilter = new Filter({
-        glProgram: new GlProgram({ vertex:starVertex , fragment:starFragment }),
-        resources: {
-            timeUniforms: {
-                uTime: { value: 0.0, type: 'f32' },
-              },
-            u_starDensity: 60.0,
-            u_sharpness: 25.0,
-            u_tint: [{ value: 0.0, type: 'f32' }, { value: 0.0, type: 'f32' }, { value: 0.0, type: 'f32' }]
-        }
-    }
-    );
-    
-      
-
-    this.bgSprite.filters = [this.bgFilter];
+    this.addShader();
 
     // --- волны и босс ---
+    this.setWaveManager();
+  }
+
+  setWaveManager() {
     this.waveManager = new WaveManager([
         {
-            count: 20,
+            count: 5,
             interval: 60,
             onStart: () => this.game.hud.showMessage("1 хвиля"),
+            pauseAfter: 120,
             createEnemy: () => {
-                const boss = new Enemy(
+                const enemy = new Enemy(
                     PIXI.Texture.WHITE,
                     (this.screenWidth / 2) * Math.random(),
                     -100,
                     this.screenWidth,
                     this.screenHeight,
                 );
-                return boss;
+                if(Math.random() < 0.5) {
+                    enemy.setTarget(this.player);
+                }
+                return enemy;
             },
-            onComplete: () => this.game.hud.showMessage("1 хвиля -"),
+            onComplete: () => this.game.hud.showMessage("1 хвиля ліквідована"),
             },
         {
-            count: 30,
-            interval: 30,
+            count: 10,
+            interval: 10,
             onStart: () => this.game.hud.showMessage("2 хвиля"),
+            pauseAfter: 280,
             createEnemy: () => {
-                const boss = new Enemy(
+                const enemy = new Enemy(
                     PIXI.Texture.WHITE,
-                    (this.screenWidth / 2) * Math.random(),
+                    (this.screenWidth) * Math.random() + (this.screenWidth / 4),
                     -100,
                     this.screenWidth,
                     this.screenHeight,
                 );
-                return boss;
+                const size = 40 * Math.random() + 20;
+                enemy.width = size;
+                enemy.height = size;
+                return enemy;
             },
             onComplete: () => this.game.hud.showMessage("2 хвиля ліквідована"),
             },
@@ -136,11 +121,14 @@ export class Level1Scene extends Scene {
             this.player
           );
           boss.speed = 2;
-          this.game.hud.setBossHealth(boss.health, boss.maxHelth);
+          this.game.hud.setBossHealth(boss.health, boss.maxHealth);
           boss.setTarget(this.player);
 
-          boss.events.on("damage", (hp: number, max: number) => {
-            this.game.hud.setBossHealth(hp, max);
+          boss.events.on("collision", (i, other) => {
+            if (other instanceof Bullet) boss.takeDamage(10);
+          });
+          boss.events.on("damage", (hp, maxHp) => {
+            this.game.hud.setBossHealth(hp, maxHp)
           });
 
           boss.events.on("destroy", () => this.game.hud.setBossHealth(0, 0));
@@ -155,11 +143,11 @@ export class Level1Scene extends Scene {
           });
 
           boss.events.on("bossShoot", (bossBullet: BossBullet) => {
-            this.bossBullets.add(bossBullet);
-            bossBullet.events.on("destroy", () => this.bossBullets.remove(bossBullet));
-            bossBullet.events.on("collision", (i, other) => {
-              if (other instanceof Player || other instanceof Bullet) bossBullet.entityDestroy();
-            });
+            // this.bossBullets.add(bossBullet);
+            // bossBullet.events.on("destroy", () => this.bossBullets.remove(bossBullet));
+            // bossBullet.events.on("collision", (i, other) => {
+            //   if (other instanceof Player || other instanceof Bullet) bossBullet.entityDestroy();
+            // });
           });
 
           boss.events.on("spawnSubEnemy", (subEnemy: Enemy) => {
@@ -176,69 +164,152 @@ export class Level1Scene extends Scene {
     this.waveManager.onAllComplete = () => {
       this.game.hud.showMessage("Уровень пройден!");
     };
-
-    // --- стрельба игрока ---
-    this.player.events.on("shoot", (player) => {
-      const { x, y, height } = player;
-      const bullet = new Bullet(x, y - height / 2, this.screenWidth, this.screenHeight);
-      this.bullets.add(bullet);
-
-      bullet.events.on("destroy", (val) => this.bullets.remove(val));
-      bullet.events.on("collision", (other) => {
-        if (other instanceof Enemy) {
-          other.takeDamage(1);
-          bullet.entityDestroy();
-        }
-      });
-    });
-
-    // --- урон игрока ---
-    this.player.events.on("damage", (health) => {
-      this.game.hud.setPlayerHealth(health, this.player.maxHelth);
-    });
-
-    // --- бонусы ---
-    this.player.events.on("collision", (other, item) => {
-      if (item instanceof Bonus) {
-        const health = ++this.player.helth;
-        this.game.hud.setPlayerHealth(health, this.player.maxHelth);
-      } 
-      if(other instanceof BossBullet) {
-        const health = --this.player.helth;
-        this.game.hud.setPlayerHealth(health, this.player.maxHelth);
-      }
-    });
   }
 
-  update(dt: number) {
-    this.player.update(this.input);
-    this.drawStars();
-    // обновление фильтра фона
-    this.bgFilter.resources.timeUniforms.uniforms.uTime += 0.04
+  setUpVars() {
+    this.screenWidth = this.game.app.screen.width;
+    this.screenHeight = this.game.app.screen.height;
 
-    // обновляем волны
+    this.gameRenderTexture = PIXI.RenderTexture.create({
+        width: this.screenWidth,
+        height: this.screenHeight
+      });
+
+  }
+
+  addShader() {
+    this.shader = PIXI.Filter.from({
+        gl: {
+            vertex,
+            fragment,
+          },
+          resources: {
+            shaderToyUniforms: {
+                u_resolution: { value: [640, 360, 1], type: 'vec2<f32>' },
+
+              u_time: { value: 0, type: 'f32' },
+              u_player: { value: [640, 360], type: 'vec2<f32>' },
+            },
+          },
+    });
+
+    const quadGeometry = new PIXI.Geometry();
+    quadGeometry.addAttribute("aVertexPosition", [
+      -1, -1,
+       1, -1,
+       1,  1,
+      -1,  1,
+    ], 2);
+
+    quadGeometry.addAttribute("aUV", [
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+    ], 2);
+
+
+    quadGeometry.addIndex([0, 1, 2, 0, 2, 3]);
+      const quad = new PIXI.Mesh({
+        geometry: quadGeometry,
+        shader:this.shader,
+      });
+    
+      quad.width = this.screenWidth;
+      quad.height = this.screenHeight;
+      quad.x = this.screenWidth / 2;
+      quad.y = this.screenHeight / 2;
+      quad.zIndex = 0;
+      this.game.app.stage.addChild(quad);
+  }
+
+  craateBgFilter() {
+    this.bgSprite = new PIXI.Sprite();
+    this.bgSprite.width = this.screenWidth;
+    this.bgSprite.height = this.screenHeight;
+    this.bgSprite.anchor.set(0);
+    this.bgSprite.zIndex = -1000;
+    this.container.addChildAt(this.bgSprite, 0);
+    this.timeUniform = { value: 0.0 };
+
+    this.bgFilter = new Filter({
+        resources: {
+            timeUniforms: {
+                uTime: { value: 0.0, type: 'f32' },
+              },
+        }
+    }
+    );
+  }
+  
+  createPlayer() {
+    this.player = new Player(PIXI.Texture.WHITE, this.screenWidth, this.screenHeight);
+    this.container.addChild(this.player);
+    this.game.hud.setPlayerHealth(this.player.health, this.player.maxHealth);
+
+    this.player.events.on("shoot", (player) => {
+        const { x, y, height } = player;
+        const bullet = new Bullet(x, y - height / 2, this.screenWidth, this.screenHeight);
+        this.bullets.add(bullet);
+  
+        bullet.events.on("destroy", (val) => this.bullets.remove(val));
+        bullet.events.on("collision", (other) => {
+          if (other instanceof Enemy) {
+            other.takeDamage(1);
+            bullet.entityDestroy();
+          }
+        });
+      });
+  
+      // --- урон игрока ---
+      this.player.events.on("damage", (health) => {
+        this.game.hud.setPlayerHealth(health, this.player.maxHealth);
+      });
+      
+      this.player.events.on("destroy", (health) => {
+          this.game.hud.showMessage("DARINKA ZHOPA")
+      });
+  
+      this.player.events.on("collision", (other, item) => {
+        if (item instanceof Bonus) {
+          const health = ++this.player.health;
+          this.game.hud.setPlayerHealth(health, this.player.maxHealth);
+        } 
+        if(other instanceof BossBullet) {
+          this.player.takeDamage();
+        }
+      });
+  }
+
+  removeEnemyHandler(enemy)  {
+    this.Enemys.remove(enemy);
+
+    if (Math.random() < 0.15) {
+      const bonus = new Bonus(enemy.x, enemy.y, this.screenWidth, this.screenHeight);
+      this.bonuses.add(bonus);
+      bonus.events.on("collision", (i, other) => {
+        if (other instanceof Player) bonus.entityDestroy();
+      });
+      bonus.events.on("destroy", () => this.bonuses.remove(bonus));
+    }
+
+    this.Enemys.entities.forEach((item) => {
+      item.setTarget(this.player);
+      setTimeout(() => item.setTarget(null), 500)
+    });
+  }
+  
+
+  update(dt: number) {
+    this.shader.resources.shaderToyUniforms.uniforms.u_time += 0.005;
+    this.shader.resources.shaderToyUniforms.uniforms.u_player = [this.player.x * 1.0, this.screenHeight - this.player.y * 1.0];
+
+    this.player.update(this.input);
+
     this.waveManager.update(dt, (enemy: Enemy) => {
       this.Enemys.add(enemy);
 
-      enemy.events.on("destroy", () => {
-        this.Enemys.remove(enemy);
-
-        // шанс на бонус
-        if (Math.random() < 0.15) {
-          const bonus = new Bonus(enemy.x, enemy.y, this.screenWidth, this.screenHeight);
-          this.bonuses.add(bonus);
-          bonus.events.on("collision", (i, other) => {
-            if (other instanceof Player) bonus.entityDestroy();
-          });
-          bonus.events.on("destroy", () => this.bonuses.remove(bonus));
-        }
-
-        // реакция врагов
-        this.Enemys.entities.forEach((item) => {
-          item.setTarget(this.player);
-          setTimeout(() => item.setTarget(null), 500);
-        });
-      });
+      enemy.events.on("destroy", () => this.removeEnemyHandler(enemy));
     });
 
     this.bullets.update(dt);

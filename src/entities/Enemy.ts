@@ -3,6 +3,25 @@ import { Entity } from "./Entity";
 import { Bullet } from "./Bullet";
 import { Player } from "./Player";
 import gsap from "gsap";
+import { LoadAssets } from "../core/LoadAssets";
+
+function generateFrames(sheetWidth: number, sheetHeight:number, frameWidth: number, frameHeight:number) {
+  const textures = [];
+  const cols = sheetWidth / frameWidth;
+  const rows = sheetHeight / frameHeight;
+  const baseTexture = LoadAssets.getInstance().getTexture('enemy', '1');
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const rect = new PIXI.Rectangle(x * frameWidth, y * frameHeight, frameWidth, frameHeight);
+      const texture = new PIXI.Texture({
+        source: baseTexture.source, // используем source из текстуры
+        frame: rect
+    });
+      textures.push(texture);
+    }
+  }
+  return textures;
+}
 
 export class Enemy extends Entity {
   speed: number = 2;
@@ -11,12 +30,20 @@ export class Enemy extends Entity {
   debuf: number = 0;
   target: Player | null = null;
   healthBar: PIXI.Graphics;
+  animatedSprite;
   behavior?: (dt: number) => void;
   protected screenWidth: number = 800;
   protected screenHeight: number = 600;
 
   constructor(texture: PIXI.Texture, startX?: number, startY?: number, screenWidth: number = 800, screenHeight: number = 600) {
-    super(texture);
+    const frames = generateFrames(640, 1280, 128, 128);
+    super(frames[0]);
+    this.animatedSprite = new PIXI.AnimatedSprite(frames);
+    this.animatedSprite.anchor.set(0.5);
+    this.animatedSprite.animationSpeed = 1;
+    this.animatedSprite.play();
+    this.addChild(this.animatedSprite);
+
     this.anchor.set(0.5);
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
@@ -33,6 +60,8 @@ export class Enemy extends Entity {
     this.addChild(this.healthBar);
 
     this.updateHealthBar();
+
+    
   }
 
   update(dt: number) {
@@ -59,6 +88,8 @@ export class Enemy extends Entity {
     // если есть кастомное поведение
     this.behavior?.(dt);
   }
+
+
 
   setTarget(val: Player | null) {
     this.target = val;
@@ -95,20 +126,6 @@ export class Enemy extends Entity {
   }
 
   updateHealthBar() {
-    this.healthBar.clear();
-
-    const barWidth = this.width;
-    const barHeight = 6;
-
-    // фон (красный)
-    this.healthBar.beginFill(0xff0000);
-    this.healthBar.drawRect(-barWidth / 2, 0, barWidth, barHeight);
-    this.healthBar.endFill();
-
-    // текущее здоровье (зелёный)
-    const healthPercent = Math.max(this.health / this.maxHelth, 0);
-    this.healthBar.beginFill(0x00ff00);
-    this.healthBar.drawRect(-barWidth / 2, 0, barWidth * healthPercent, barHeight);
-    this.healthBar.endFill();
+    
   }
 }

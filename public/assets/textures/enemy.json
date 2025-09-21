@@ -1,0 +1,26 @@
+{
+    "frames": {
+        "1": {
+            "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 640,
+                "h": 1280
+            }
+        }
+    },
+    "animations": {
+        "1": ["1"]
+    },
+    "meta": {
+        "app": "PixiJS",
+        "version": "1.0",
+        "image": "enemy.png",
+        "format": "RGBA8888",
+        "size": {
+            "w": 640,
+            "h": 1280
+        },
+        "scale": "1"
+    }
+}

@@ -21,13 +21,14 @@ export class WaveManager {
     onAllComplete?: () => void;
     isPaused: boolean = false;
     pauseTimer: number = 0;
+    isComlete: boolean = false;
   
     constructor(waves: WaveConfig[]) {
       this.waves = waves;
     }
   
     startNextWave(addEnemy: (e: Enemy) => void) {
-      if (this.currentWaveIndex >= this.waves.length) {
+      if (this.currentWaveIndex >= this.waves.length && !this.isComlete) {
         this.onAllComplete?.();
         return;
       }
@@ -89,6 +90,7 @@ export class WaveManager {
 
       if (!this.spawner) {
         this.startNextWave(addEnemy);
+
         return;
       }
       this.spawner.update(dt, addEnemy);

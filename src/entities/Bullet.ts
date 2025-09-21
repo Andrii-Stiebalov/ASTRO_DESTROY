@@ -20,9 +20,8 @@ export class Bullet extends Entity {
   }
   update() {
     this.y -= 10;
-    // проверка выхода за экран
-    // if (this.y < 0) {
-    //   this.destroy();
-    // }
+    if (this.y < 0) {
+      this.entityDestroy();
+    }
   }  
 }

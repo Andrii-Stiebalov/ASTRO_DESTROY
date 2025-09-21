@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { gsap } from "gsap";
 
 export class HUD {
   public container: PIXI.Container;
@@ -8,7 +9,7 @@ export class HUD {
   private bossHpBg: PIXI.Graphics;
   private bossHpFill: PIXI.Graphics;
 
-  private messageTimer: number = 0; // сколько ещё показывать сообщение
+  private messageTimer: number = 0;
   private isMessageVisible: boolean = false;
   private screenWidth: number = 800;
   private screenHeight: number = 600;
@@ -18,16 +19,14 @@ export class HUD {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
 
-    // this.scoreText = new PIXI.Text("left to kill: 10", { fill: 0xffffff });
-    // this.livesText = new PIXI.Text("Lives: 3", { fill: 0xffffff });
-
-    // this.livesText.y = 30;
-
-    // Сообщение по центру экрана
+    // Сообщение по центру экрана в моноширинном стиле
     this.messageText = new PIXI.Text("", {
-      fill: 0xffff00,
-      fontSize: 32,
+      fill: 0xffffff,
+      fontSize: 62,
       fontWeight: "bold",
+      fontFamily: "monospace",
+      stroke: 0x000000,
+      strokeThickness: 4
     });
 
     this.messageText.anchor.set(0.5);
@@ -35,21 +34,21 @@ export class HUD {
     this.messageText.y = this.screenHeight / 2;
     this.messageText.visible = false;
 
-    // Полоса HP игрока
+    // Полоса HP игрока - черно-белый стиль
     this.hpBarBg = new PIXI.Graphics();
     this.hpBarFill = new PIXI.Graphics();
-    this.hpBarBg.y = this.screenHeight * 0.96; // 10% от высоты экрана
+    this.hpBarBg.y = this.screenHeight * 0.96;
     this.hpBarFill.y = this.screenHeight * 0.96;
+    this.drawHpBar(1);
 
-    this.drawHpBar(1); // по умолчанию 100%
 
-    // Полоса HP босса (вверху по центру)
+    // Полоса HP босса - черно-белый стиль
     this.bossHpBg = new PIXI.Graphics();
     this.bossHpFill = new PIXI.Graphics();
-    this.bossHpBg.y = this.screenHeight * 0.02; // 2% от высоты экрана
-    this.bossHpBg.y = this.screenHeight * 0
-    this.bossHpFill.y = this.screenHeight * 0.02;
-    this.setBossHealth(0, 1); // скрыть изначально
+    this.bossHpBg.y = 15;
+    this.bossHpFill.y = 15;
+    this.setBossHealth(0, 1);
+
 
     this.container.addChild(
       this.messageText,
@@ -58,28 +57,72 @@ export class HUD {
       this.bossHpBg,
       this.bossHpFill
     );
+    this.drawBossHpBar(1);
+
+
   }
 
   showMessage(text: string, duration: number = 100) {
     this.messageText.text = text;
+    this.messageText.alpha = 0;
     this.messageText.visible = true;
     this.messageTimer = duration;
     this.isMessageVisible = true;
+
+    // GSAP анимация появления сообщения
+    gsap.to(this.messageText, {
+      alpha: 1,
+      duration: 0.3,
+      ease: "power2.out",
+      onComplete: () => {
+        // Анимация исчезновения по таймеру
+        setTimeout(() => {
+          this.hideMessage();
+        }, duration);
+      }
+    });
+  }
+
+  private hideMessage() {
+    gsap.to(this.messageText, {
+      alpha: 0,
+      duration: 0.5,
+      ease: "power2.in",
+      onComplete: () => {
+        this.messageText.visible = false;
+        this.isMessageVisible = false;
+      }
+    });
   }
 
   update(dt: number) {
     if (this.isMessageVisible) {
       this.messageTimer -= dt;
-      if (this.messageTimer <= 0) {
-        this.messageText.visible = false;
-        this.isMessageVisible = false;
+      if (this.messageTimer <= 0 && this.messageText.alpha === 1) {
+        this.hideMessage();
       }
     }
   }
 
   setPlayerHealth(current: number, max: number) {
+    console.log(current, max)
     const ratio = Math.max(0, Math.min(1, current / max));
-    this.drawHpBar(ratio);
+    this.animateHpBar(ratio);
+  }
+
+  private animateHpBar(targetRatio: number) {
+    // Анимация изменения полосы здоровья
+    gsap.to(this.hpBarFill, {
+      width: 200 * targetRatio,
+      duration: 0.3,
+      ease: "power2.out",
+    //   onUpdate: () => {
+    //     this.hpBarFill.clear();
+    //     this.hpBarFill.beginFill(0xffffff); // Белый цвет
+
+    //     this.hpBarFill.endFill();
+    //   }
+    });
   }
 
   private drawHpBar(ratio: number) {
@@ -88,37 +131,115 @@ export class HUD {
     const x = this.screenWidth * 0.5 - width * 0.5;
 
     this.hpBarBg.clear();
-    this.hpBarBg.beginFill(0x333333);
+    this.hpBarBg.beginFill(0x000000); // Черный фон
+    this.hpBarBg.lineStyle(2, 0xffffff); // Белая обводка
     this.hpBarBg.drawRect(x, 0, width, height);
     this.hpBarBg.endFill();
 
     this.hpBarFill.clear();
-    this.hpBarFill.beginFill(0x00ff66);
+    this.hpBarFill.beginFill(0xffffff); // Белый заполнитель
     this.hpBarFill.drawRect(x, 0, width * ratio, height);
     this.hpBarFill.endFill();
   }
 
   setBossHealth(current: number, max: number) {
     const ratio = Math.max(0, Math.min(1, max > 0 ? current / max : 0));
-    this.drawBossHpBar(ratio);
+    this.animateBossHpBar(ratio);
+    
     const visible = max > 0 && current > 0;
-    this.bossHpBg.visible = visible;
-    this.bossHpFill.visible = visible;
+    if (visible && !this.bossHpBg.visible) {
+      this.showBossHealthBar();
+    } else if (!visible && this.bossHpBg.visible) {
+      this.hideBossHealthBar();
+    }
+  }
+
+  private showBossHealthBar() {
+    this.bossHpBg.visible = true;
+    this.bossHpFill.visible = true;
+    
+    // Анимация появления полосы босса
+    gsap.fromTo([this.bossHpBg, this.bossHpFill], 
+      { alpha: 0, y: 15 },
+      { alpha: 1, y: 15, duration: 0.5, ease: "back.out" }
+    );
+  }
+
+  private hideBossHealthBar() {
+    // Анимация исчезновения полосы босса
+    gsap.to([this.bossHpBg, this.bossHpFill], {
+      alpha: 0,
+      y: 100,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => {
+        this.bossHpBg.visible = false;
+        this.bossHpFill.visible = false;
+      }
+    });
+  }
+
+  private animateBossHpBar(targetRatio: number) {
+    // Анимация изменения полосы здоровья босса
+    gsap.to(this.bossHpFill, {
+      width: 400 * targetRatio,
+      duration: 0.4,
+      ease: "power2.out",
+      onUpdate: () => {
+        this.bossHpFill.clear();
+        this.bossHpFill.beginFill(0xffffff); // Белый цвет
+        this.bossHpFill.drawRect(
+          this.screenWidth * 0.5 - 200,
+          0,
+          this.bossHpFill.width,
+          16
+        );
+        this.bossHpFill.endFill();
+      }
+    });
   }
 
   private drawBossHpBar(ratio: number) {
     const width = 400;
     const height = 16;
-    const x = this.screenWidth * 0.5 - width * 0.5;
+    const x = this.screenWidth * 0.5 - width / 2;
 
     this.bossHpBg.clear();
-    this.bossHpBg.beginFill(0x222222);
+    this.bossHpBg.beginFill(0x000000); // Черный фон
+    this.bossHpBg.lineStyle(2, 0xffffff); // Белая обводка
     this.bossHpBg.drawRect(x, 0, width, height);
     this.bossHpBg.endFill();
 
     this.bossHpFill.clear();
-    this.bossHpFill.beginFill(0xff3366);
+    this.bossHpFill.beginFill(0xffffff); // Белый заполнитель
     this.bossHpFill.drawRect(x, 0, width * ratio, height);
     this.bossHpFill.endFill();
+  }
+
+  // Дополнительный метод для анимации повреждения
+  flashDamage() {
+    gsap.to(this.hpBarFill, {
+      alpha: 0.3,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 2,
+      ease: "power1.inOut"
+    });
+  }
+
+  // Анимация для критического уровня здоровья
+  pulseLowHealth(isLow: boolean) {
+    if (isLow) {
+      gsap.to(this.hpBarFill, {
+        alpha: 0.7,
+        duration: 0.5,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut"
+      });
+    } else {
+      gsap.killTweensOf(this.hpBarFill);
+      this.hpBarFill.alpha = 1;
+    }
   }
 }

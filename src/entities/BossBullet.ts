@@ -9,9 +9,9 @@ export class BossBullet extends Entity {
 
   constructor(x: number, y: number, screenWidth: number = 800, screenHeight: number = 600) {
     super(PIXI.Texture.WHITE);
-    this.tint = 0xff0000; // красная пуля босса
-    this.width = screenWidth * 0.006; // 0.6% от ширины экрана
-    this.height = screenHeight * 0.006; // 1.7% от высоты экрана
+    this.tint = 0xff0000;
+    this.width = screenWidth * 0.006;
+    this.height = screenHeight * 0.006;
     this.position.set(x, y);
   }
 
@@ -22,10 +22,9 @@ export class BossBullet extends Entity {
   }
 
   update(dt: number) {
-    this.y += this.speed * dt; // движется вниз
-    this.x += this.speed * 0.2; // движется вниз
-    // проверка выхода за экран
-    if (this.y > 720) { // фиксированное значение для совместимости
+    this.y += this.speed * dt;
+    this.x += this.speed * 0.2;
+    if (this.y > 720) {
       this.entityDestroy();
     }
   }

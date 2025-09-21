@@ -1,0 +1,12 @@
+{
+    "textures": {
+      "spaceship_idle": "assets/textures/spaceship_idle.json",
+      "spaceship_move": "assets/textures/spaceship_run.json",
+      "enemy": "assets/textures/enemy.json"
+    },
+    "sounds": {
+      "laser": "assets/sounds/laser.mp3",
+      "explosion": "assets/sounds/explosion.mp3"
+    }
+  }
+  

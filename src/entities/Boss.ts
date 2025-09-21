@@ -20,20 +20,14 @@ export class Boss extends Enemy {
     this.height = screenHeight * 0.25;
     this.hpBar = new PIXI.Graphics();
     this.addChild(this.hpBar);
-    this.updateHpBar();
     this.target = target;
   }
 
-  updateHpBar() {
-    this.hpBar.clear();
-    this.hpBar.beginFill(0xff0000);
-    this.hpBar.drawRect(200, 130, (this.health / this.maxHelth) * 200, 100);
-    this.hpBar.endFill();
-  }
 
   takeDamage(amount: number) {
     this.health -= amount;
-    this.updateHpBar();
+    console.log(`this.health, this.maxHelth`);
+    console.log(this.health, this.maxHelth);
     this.events.emit('damage', this.health, this.maxHelth);
     if (this.health <= 0) {
       this.entityDestroy();
@@ -74,7 +68,6 @@ export class Boss extends Enemy {
   }
 
   spawnSubEnemy() {
-    // Создаём под-врага
     const subEnemy = new Enemy(PIXI.Texture.WHITE, undefined, undefined, this.screenWidth, this.screenHeight);
     subEnemy.x =(Math.random()) * this.screenWidth;
     subEnemy.y = this.y - this.height;

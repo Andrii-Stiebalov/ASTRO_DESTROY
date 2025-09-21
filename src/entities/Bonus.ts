@@ -7,8 +7,8 @@ export class Bonus extends Entity {
   constructor(x: number, y: number, screenWidth: number = 800, screenHeight: number = 600) {
     super(PIXI.Texture.WHITE);
     this.tint = 0xff0000;
-    this.width = screenWidth * 0.02; // 2% от ширины экрана
-    this.height = screenHeight * 0.025; // 2.5% от высоты экрана
+    this.width = 20; // 2% от ширины экрана
+    this.height = 20; // 2.5% от высоты экрана
     this.position.set(x, y);
   }
   onTriggerCollision(other: Entity): void {
