@@ -11,6 +11,7 @@ import { Boss } from "../entities/Boss";
 import { BossBullet } from "../entities/BossBullet";
 import { Filter, GlProgram } from "pixi.js";
 import { fragment, vertex } from "../shaders/starsShader";
+import { MenuScene } from "./MenuScene";
 
 type Updatable = { update?: (dt: number) => void };
 
@@ -267,7 +268,8 @@ export class Level1Scene extends Scene {
       });
       
       this.player.events.on("destroy", (health) => {
-          this.game.hud.showMessage("DARINKA ZHOPA")
+          this.game.hud.showMessage("АНТІПЕРЕМОГА")
+          this.game.changeScene(new MenuScene(this.game))
       });
   
       this.player.events.on("collision", (other, item) => {

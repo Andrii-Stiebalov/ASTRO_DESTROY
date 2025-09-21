@@ -3,77 +3,46 @@ export const fragment = `
 precision mediump float;
 
 uniform vec2 u_resolution;
-uniform vec2 u_player;
 uniform float u_time;
 out vec4 fragColor;
 
-// Псевдо-случайная функция
-float rand(vec2 n) { 
-    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
-}
-
-// Функция для генерации иероглифоподобных символов
-float glyph(vec2 uv, float scale) {
-    vec2 grid = fract(uv * scale);
-    vec2 cell = floor(uv * scale);
-    
-    // Уникальный паттерн для каждой ячейки
-    float pattern = rand(cell);
-    
-    // Создаем различные иероглифы
-    if (pattern < 0.2) {
-        return step(0.3, max(abs(grid.x - 0.5), abs(grid.y - 0.4)));
-    } else if (pattern < 0.4) {
-        return step(0.4, distance(grid, vec2(0.5)));
-    } else if (pattern < 0.6) {
-        return step(0.35, abs(grid.x - grid.y));
-    } else if (pattern < 0.8) {
-        return step(0.35, abs((1.0 - grid.x) - grid.y));
-    } else {
-        return step(0.25, min(grid.x, grid.y));
-    }
+// Простая функция шума
+float noise(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
 void main() {
-    vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-    vec2 center = (u_player - 0.55 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-    
-    // Смещение UV относительно центра игрока
-    vec2 pos = uv - center;
-    float dist = length(pos);
-    float angle = atan(pos.y, pos.x);
-    
-    // Спиральные координаты
-    float spiral = log(dist) * 2.0 + angle * 0.5 + u_time * 2.0;
-    float spiralMask = fract(spiral * 0.5);
-    
-    // Эффект перспективы и глубины
-    float depth = 1.0 - smoothstep(0.0, 1.5, dist);
-    float perspective = 1.0 / (dist + 0.5);
-    
-    // Фрактальные итерации
-    float fractal = 0.0;
-    vec2 fractalUV = pos * (5.0 + 3.0 * sin(u_time * 0.5));
-    for (int i = 0; i < 4; i++) {
-        fractal += glyph(fractalUV, 1.0 + float(i) * 3.0) * (0.7 - float(i) * 0.2);
-        fractalUV = fractalUV * 1.8 + vec2(sin(u_time * 0.3), cos(u_time * 0.2));
-    }
-    
-    // Создаем спиральную маску
-    float spiralPattern = step(0.3, spiralMask) * step(spiralMask, 0.7);
-    
-    // Комбинируем эффекты
-    float finalEffect = fractal * spiralPattern * perspective * depth;
-    finalEffect *= 1.0 + 0.3 * sin(u_time * 5.0 - dist * 10.0); // Добавляем пульсацию
-    
-    // Эффект засасывания (втягивания к центру)
-    float suction = smoothstep(0.8, 0.0, dist) * (0.5 + 0.5 * sin(u_time * 3.0 - dist * 8.0));
-    
-    // Финальный цвет (черно-белый)
-    float color = clamp(finalEffect + suction, 0.0, 1.0);
-    
+    // Нормализуем координаты и центрируем
+    vec2 uv = (gl_FragCoord.xy / u_resolution.xy - 1.) * 2.0;
+    uv.x *= u_resolution.x / u_resolution.y;
+
+    // Полярные координаты
+    float angle = atan(uv.y, uv.x);
+    float radius = length(uv);
+
+    // Движение по тоннелю
+    float speed = u_time * 1.0;
+    float tunnel = 2.0 / (radius + 0.5) + speed * 0.5;
+
+    // ЧБ полосы - комикс стиль
+    float lines = step(0.6, fract(tunnel + sin(angle * 5.0) * 0.1));
+
+    // Виньетка по радиусу
+    float vignette = smoothstep(2., 0.1, radius);
+
+    // Тень и глубина
+    float depth = exp(-radius * 5.0); // чем дальше, тем темнее
+    float shadow = depth * 0.5 + 0.5;
+
+    // Лёгкий дым/туман
+    float fog = noise(uv * 3.0 + u_time * 0.5) * 0.2;
+
+    // Финальный цвет с комбинированием эффектов
+    float color = lines * shadow * vignette + fog;
+
     fragColor = vec4(vec3(color), 1.0);
 }
+
  `;
 export const vertex = `
 #version 300 es

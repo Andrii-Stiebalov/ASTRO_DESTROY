@@ -42,6 +42,8 @@ export class Player extends Entity {
     this.x = screenWidth / 2;
     this.y = screenHeight * 0.9;
 
+    this.zIndex = 10;
+
     // Предзагружаем все анимации
     this.loadAllAnimations();
 

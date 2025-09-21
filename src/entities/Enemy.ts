@@ -58,7 +58,7 @@ export class Enemy extends Entity {
     this.healthBar = new PIXI.Graphics();
     this.healthBar.y = -this.height / 2 - 10; // над врагом
     this.addChild(this.healthBar);
-
+    this.zIndex = 5;
     this.updateHealthBar();
 
     
