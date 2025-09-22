@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/СТАН-В_РОЗРОБЦІ-orange?style=for-the-badge)
 ![Last Updated](https://img.shields.io/badge/ОНОВЛЕНО-21.09.2025-blue?style=for-the-badge)
 
----<img width="747" height="640" alt="image" src="https://github.com/user-attachments/assets/cc58e821-861b-4a5e-a57d-6840b49f984b" />
+<img width="747" height="640" alt="image" src="https://github.com/user-attachments/assets/cc58e821-861b-4a5e-a57d-6840b49f984b" />
 
 
 ## 📖 Огляд
@@ -72,6 +72,7 @@ open index.html
 ```
 
 ---
+
 
 
 
