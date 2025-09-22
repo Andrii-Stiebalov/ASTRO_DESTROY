@@ -2,21 +2,14 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  // Базовый путь - название вашего репозитория
-  // Например: https://username.github.io/repository-name/
-  base: process.env.NODE_ENV === 'production' ? '/my-pixi-game/' : './',
-  
-  root: './',
+  base: process.env.NODE_ENV === 'production' ? '/ASTRO_DESTROY/' : '/',
   
   build: {
-    outDir: '../dist',
-    sourcemap: false, // Отключаем sourcemaps для production
-    
-    // Оптимизации для production
+    outDir: 'dist',
+    sourcemap: false,
     minify: 'esbuild',
     cssMinify: true,
     reportCompressedSize: true,
-    
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -25,7 +18,7 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
-          const extType = assetInfo.name?.split('.')[1];
+          const extType = assetInfo.name?.split('.').pop();
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
             return 'assets/images/[name]-[hash][extname]';
           }
@@ -40,17 +33,17 @@ export default defineConfig({
       },
     },
   },
-  
+
   server: {
     port: 3000,
     open: true,
   },
-  
+
   preview: {
     port: 4173,
     host: true,
   },
-  
+
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -59,7 +52,7 @@ export default defineConfig({
       '@components': resolve(__dirname, 'src/components'),
     },
   },
-  
+
   optimizeDeps: {
     include: ['pixi.js'],
   },

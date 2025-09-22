@@ -4,6 +4,7 @@ import type { Game } from '../core/Game';
 import { Level1Scene } from './Level1Scene';
 import { fragment, vertex } from '../shaders/MenuBgShader';
 import * as PIXI from 'pixi.js';
+import gsap from 'gsap';
 
 export class MenuScene extends Scene {
   private title: Text;
@@ -80,7 +81,7 @@ export class MenuScene extends Scene {
     });
 
     this.title = new Text({
-      text: 'TERMINAL DEFENSE',
+      text: 'ALT PODOL',
       style: titleStyle
     });
     
@@ -101,7 +102,7 @@ export class MenuScene extends Scene {
     });
 
     const subtitle = new Text({
-      text: 'SYSTEM BOOT SEQUENCE',
+      text: '知者不言，言者不知',
       style: subtitleStyle
     });
     
@@ -115,79 +116,103 @@ export class MenuScene extends Scene {
   }
 
   private createPlayButton(): void {
-    // Контейнер для 3D кнопки
     this.playButton = new Container();
     this.playButton.position.set(
       this.game.app.view.width / 2,
-      this.game.app.view.height * 0.5
+      this.game.app.view.height * 0.46
     );
-
-    // Тень кнопки (нижняя часть 3D эффекта)
-    const buttonShadow = new Graphics();
-    buttonShadow.roundRect(-80, 8, 160, 60, 10);
-    buttonShadow.fill({ color: 0x333333 });
-
-    // Основная часть кнопки
-    const buttonMain = new Graphics();
-    buttonMain.roundRect(-80, 0, 160, 60, 10);
-    buttonMain.fill({ color: 0xffffff });
-    buttonMain.stroke({ color: 0x000000, width: 2 });
-
-    // Текст кнопки
+  
+    // Shadow
+    const buttonShadow = new Graphics()
+      .roundRect(-80, 8, 160, 60, 10)
+      .fill({ color: 0x333333 });
+  
+    // Main button
+    const buttonMain = new Graphics()
+      .roundRect(-80, 0, 160, 60, 10)
+      .fill({ color: 0xffffff })
+      .stroke({ color: 0x000000, width: 2 });
+  
+    // Text
     const buttonText = new Text({
-      text: 'START',
+      text: "START",
       style: new TextStyle({
-        fontFamily: 'monospace',
+        fontFamily: "monospace",
         fontSize: 20,
-        fontWeight: 'bold',
+        fontWeight: "bold",
         fill: 0x000000,
-        letterSpacing: 2
-      })
+        letterSpacing: 2,
+      }),
     });
     buttonText.anchor.set(0.5);
-    buttonText.position.set(0, 25);
-
-    // Добавляем элементы в правильном порядке (сначала тень, потом кнопка)
+    buttonText.position.set(0, 28);
+  
     this.playButton.addChild(buttonShadow, buttonMain, buttonText);
-
-    // Интерактивность
-    this.playButton.eventMode = 'static';
-    this.playButton.cursor = 'pointer';
-
-    this.playButton.on('pointerover', () => {
-      buttonMain.clear();
-      buttonMain.roundRect(-80, -4, 160, 60, 10); // Поднимаем кнопку
-      buttonMain.fill({ color: 0xffffff });
-      buttonMain.stroke({ color: 0x000000, width: 2 });
-      
-      buttonShadow.clear();
-      buttonShadow.roundRect(-80, 4, 160, 60, 10); // Корректируем тень
-      buttonShadow.fill({ color: 0x333333 });
+  
+    // Interactivity
+    this.playButton.eventMode = "static";
+    this.playButton.cursor = "pointer";
+  
+    // Hover effect
+    this.playButton.on("pointerover", () => {
+      gsap.to(buttonMain, {
+        y: -4,
+        duration: 0.2,
+        ease: "power2.out",
+      });
+      gsap.to(buttonText, {
+        y: 23,
+        duration: 0.2,
+        ease: "power2.out",
+      });
+      gsap.to(buttonShadow, {
+        y: -4,
+        duration: 0.2,
+        ease: "power2.out",
+      });
     });
-
-    this.playButton.on('pointerout', () => {
-      buttonMain.clear();
-      buttonMain.roundRect(-80, 0, 160, 60, 10); // Возвращаем в исходное положение
-      buttonMain.fill({ color: 0xffffff });
-      buttonMain.stroke({ color: 0x000000, width: 2 });
-      
-      buttonShadow.clear();
-      buttonShadow.roundRect(-80, 8, 160, 60, 10);
-      buttonShadow.fill({ color: 0x333333 });
+  
+    this.playButton.on("pointerout", () => {
+      gsap.to(buttonMain, {
+        y: 0,
+        duration: 0.2,
+        ease: "power2.inOut",
+      });
+      gsap.to(buttonText, {
+        y: 28,
+        duration: 0.2,
+        ease: "power2.inOut",
+      });
+      gsap.to(buttonShadow, {
+        y: 0,
+        duration: 0.2,
+        ease: "power2.inOut",
+      });
     });
-
-    this.playButton.on('pointerdown', () => {
-      // Эффект нажатия
-      buttonMain.clear();
-      buttonMain.roundRect(-80, 4, 160, 60, 10); // Опускаем кнопку
-      buttonMain.fill({ color: 0xcccccc });
-      buttonMain.stroke({ color: 0x000000, width: 2 });
-      
-      setTimeout(() => {
-        this.game.changeScene(new Level1Scene(this.game));
-      }, 150);
+  
+    this.playButton.on("pointerdown", () => {
+      gsap.to(buttonMain, {
+        y: 4,
+        duration: 0.1,
+        ease: "power1.inOut",
+        onComplete: () => {
+          setTimeout(() => {
+            this.game.changeScene(new Level1Scene(this.game));
+          }, 150);
+        },
+      });
+      gsap.to(buttonText, {
+        y: 32,
+        duration: 0.1,
+        ease: "power1.inOut",
+      });
+      gsap.to(buttonShadow, {
+        y: 2,
+        duration: 0.1,
+        ease: "power1.inOut",
+      });
     });
-
+  
     this.container.addChild(this.playButton);
   }
 

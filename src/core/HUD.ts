@@ -39,7 +39,6 @@ export class HUD {
     this.hpBarFill = new PIXI.Graphics();
     this.hpBarBg.y = this.screenHeight * 0.96;
     this.hpBarFill.y = this.screenHeight * 0.96;
-    this.drawHpBar(1);
 
 
     // Полоса HP босса - черно-белый стиль
@@ -47,7 +46,6 @@ export class HUD {
     this.bossHpFill = new PIXI.Graphics();
     this.bossHpBg.y = 15;
     this.bossHpFill.y = 15;
-    this.setBossHealth(0, 1);
 
 
     this.container.addChild(
@@ -57,8 +55,6 @@ export class HUD {
       this.bossHpBg,
       this.bossHpFill
     );
-    this.drawBossHpBar(1);
-
 
   }
 
@@ -107,7 +103,7 @@ export class HUD {
   setPlayerHealth(current: number, max: number) {
     console.log(current, max)
     const ratio = Math.max(0, Math.min(1, current / max));
-    this.animateHpBar(ratio);
+    this.drawHpBar(ratio);
   }
 
   private animateHpBar(targetRatio: number) {
@@ -116,12 +112,12 @@ export class HUD {
       width: 200 * targetRatio,
       duration: 0.3,
       ease: "power2.out",
-    //   onUpdate: () => {
-    //     this.hpBarFill.clear();
-    //     this.hpBarFill.beginFill(0xffffff); // Белый цвет
+      onUpdate: () => {
+        this.hpBarFill.clear();
+        this.hpBarFill.beginFill(0xffffff); // Белый цвет
 
-    //     this.hpBarFill.endFill();
-    //   }
+        this.hpBarFill.endFill();
+      }
     });
   }
 
@@ -133,25 +129,28 @@ export class HUD {
     this.hpBarBg.clear();
     this.hpBarBg.beginFill(0x000000); // Черный фон
     this.hpBarBg.lineStyle(2, 0xffffff); // Белая обводка
-    this.hpBarBg.drawRect(x, 0, width, height);
+    this.hpBarBg.rect(x, 0, width, height);
     this.hpBarBg.endFill();
 
     this.hpBarFill.clear();
     this.hpBarFill.beginFill(0xffffff); // Белый заполнитель
-    this.hpBarFill.drawRect(x, 0, width * ratio, height);
+    this.hpBarFill.rect(x, 0, width * ratio, height);
     this.hpBarFill.endFill();
   }
 
   setBossHealth(current: number, max: number) {
     const ratio = Math.max(0, Math.min(1, max > 0 ? current / max : 0));
-    this.animateBossHpBar(ratio);
-    
+      console.log(ratio, 'ratio')
     const visible = max > 0 && current > 0;
     if (visible && !this.bossHpBg.visible) {
       this.showBossHealthBar();
     } else if (!visible && this.bossHpBg.visible) {
       this.hideBossHealthBar();
     }
+
+    setTimeout(() => {
+      this.drawBossHpBar(ratio);
+    })
   }
 
   private showBossHealthBar() {
@@ -203,16 +202,12 @@ export class HUD {
     const width = 400;
     const height = 16;
     const x = this.screenWidth * 0.5 - width / 2;
-
+    console.log('drawBossHpBar', ratio)
     this.bossHpBg.clear();
-    this.bossHpBg.beginFill(0x000000); // Черный фон
-    this.bossHpBg.lineStyle(2, 0xffffff); // Белая обводка
-    this.bossHpBg.drawRect(x, 0, width, height);
-    this.bossHpBg.endFill();
+    this.bossHpBg.rect(x, 0, width, height);
 
     this.bossHpFill.clear();
-    this.bossHpFill.beginFill(0xffffff); // Белый заполнитель
-    this.bossHpFill.drawRect(x, 0, width * ratio, height);
+    this.bossHpFill.rect(x, 0, width * ratio, height);
     this.bossHpFill.endFill();
   }
 

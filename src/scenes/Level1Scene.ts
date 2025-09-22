@@ -62,7 +62,6 @@ export class Level1Scene extends Scene {
 
     this.addShader();
 
-    // --- волны и босс ---
     this.setWaveManager();
   }
 
@@ -111,7 +110,9 @@ export class Level1Scene extends Scene {
       {
         count: 1,
         interval: 9999,
-        onStart: () => this.game.hud.showMessage("Босс выходит!"),
+        onStart: () => {
+          this.game.hud.showMessage("Босс выходит!");
+        },
         createEnemy: () => {
           const boss = new Boss(
             PIXI.Texture.WHITE,
@@ -122,15 +123,17 @@ export class Level1Scene extends Scene {
             this.player
           );
           boss.speed = 2;
-          this.game.hud.setBossHealth(boss.health, boss.maxHealth);
           boss.setTarget(this.player);
 
           boss.events.on("collision", (i, other) => {
-            if (other instanceof Bullet) boss.takeDamage(10);
+            if (other instanceof Bullet) boss.takeDamage(1);
           });
           boss.events.on("damage", (hp, maxHp) => {
             this.game.hud.setBossHealth(hp, maxHp)
           });
+          setTimeout(() => {
+            this.game.hud.setBossHealth(boss.health, boss.maxHelth)
+          })
 
           boss.events.on("destroy", () => this.game.hud.setBossHealth(0, 0));
 
@@ -247,7 +250,6 @@ export class Level1Scene extends Scene {
     this.player = new Player(PIXI.Texture.WHITE, this.screenWidth, this.screenHeight);
     this.container.addChild(this.player);
     this.game.hud.setPlayerHealth(this.player.health, this.player.maxHealth);
-
     this.player.events.on("shoot", (player) => {
         const { x, y, height } = player;
         const bullet = new Bullet(x, y - height / 2, this.screenWidth, this.screenHeight);
@@ -256,7 +258,7 @@ export class Level1Scene extends Scene {
         bullet.events.on("destroy", (val) => this.bullets.remove(val));
         bullet.events.on("collision", (other) => {
           if (other instanceof Enemy) {
-            other.takeDamage(1);
+            this.game.hud.flashDamage();
             bullet.entityDestroy();
           }
         });
